@@ -6,11 +6,25 @@ use App\Models\Modelmhs;
 use Illuminate\Http\Request;
 
 class Mhs extends Controller{
-    public function index(){
-        $data=[
-            'dataMhs' => Modelmhs::all()
-        ];
-        return View('mahasiswa.data', $data);
+    public function index(Request $request){
+        $cari = $request->query('cari');
+        
+        if(!empty($cari)){
+            $dataMahasiswa = Modelmhs::sortable()
+            ->where('mahasiswa.mhsnim', 'like', '%'.$cari.'%')
+            ->orWhere('mahasiswa.mhsnama', 'like', '%'.$cari.'%')
+            ->paginate(10)->onEachSide(3)->fragment('mahasiswa');
+        }else{
+            $dataMahasiswa = Modelmhs::sortable()->paginate(10)->onEachSide(3)->fragment('mahasiswa');
+        }
+
+        // $data=[
+        //     'dataMhs' => Modelmhs::sortable()->paginate(10)->onEachSide(3)->fragment('mahasiswa'),
+        // ];
+        return View('mahasiswa.data')->with([
+            'dataMhs' => $dataMahasiswa,
+            'cari' => $cari,
+        ]);
     }
 
     public function add(){
@@ -24,6 +38,24 @@ class Mhs extends Controller{
         $alamat = $r->alamat;
 
         try{
+
+            $validateData = $r->validate([
+                'nim' => 'required|unique:mahasiswa,mhsnim',
+                'nama' => 'required',
+                'telp' => 'required',
+                'alamat' => 'required',
+            ],
+            [
+                'nim.required' => 'NIM tidak boleh kosong!',
+                'nim.unique' => 'NIM sudah ada!',
+                'nama.required' => 'Nama Mahasiswa tidak boleh kosong!',
+                'telp.required' => 'Nomor Telp tidak boleh kosong!',
+                'alamat.required' => 'Alamat tidak boleh kosong!',
+            ]
+        
+        );
+
+
             $mhs = new Modelmhs;
             $mhs->mhsnim = $nim;
             $mhs->mhsnama = $nama;
