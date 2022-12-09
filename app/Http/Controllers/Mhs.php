@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use App\Models\Modelmhs;
 use Illuminate\Http\Request;
 
@@ -44,6 +45,8 @@ class Mhs extends Controller{
                 'nama' => 'required',
                 'telp' => 'required',
                 'alamat' => 'required',
+                'foto' => 'mimes:jpg,png|image|max:2048',
+                'foto' => 'dimensions:min_width=500,min_height=500,max_width=1000,max_height=1000'
             ],
             [
                 'nim.required' => 'NIM tidak boleh kosong!',
@@ -51,19 +54,25 @@ class Mhs extends Controller{
                 'nama.required' => 'Nama Mahasiswa tidak boleh kosong!',
                 'telp.required' => 'Nomor Telp tidak boleh kosong!',
                 'alamat.required' => 'Alamat tidak boleh kosong!',
-            ]
-        
-        );
+                'foto.mimes' => 'File harus berformat jpg atau png!',
+                'foto.dimensions' => 'Foto harus berukuran 500x500 pixel!',
+            ]);
 
+            if($r->hasFile('foto')){
+                $path = $r->file('foto')->store('uploads');
+            }else{
+                $path = '';
+            }
 
             $mhs = new Modelmhs;
             $mhs->mhsnim = $nim;
             $mhs->mhsnama = $nama;
             $mhs->mhstelp = $telp;
             $mhs->mhsalamat = $alamat;
+            $mhs->mhsfoto = $path;
             $mhs->save();
 
-            $r->session()->flash('msg', 'Data Berhasil Tersimpan!');
+            $r->session()->flash('msg', "Data dengan $nama Berhasil Tersimpan!");
             return redirect('/mhs/tambah');
             // echo 'Data Sukses Tersimpan';
         } catch (Throwable $e){
@@ -77,7 +86,8 @@ class Mhs extends Controller{
             'nim' => $nim,
             'nama' => $mhs->mhsnama,
             'telp' => $mhs->mhstelp,
-            'alamat' => $mhs->mhsalamat
+            'alamat' => $mhs->mhsalamat,
+            'foto' => $mhs->mhsfoto,
         ];
 
         return View('mahasiswa.edit', $data);
@@ -89,14 +99,26 @@ class Mhs extends Controller{
         $telp = $r->telp;
         $alamat = $r->alamat;
 
+        if($r->hasFile('foto')){
+            $path = $r->file('foto')->store('uploads');
+        }else{
+            $path = '';
+        }
+
         try{
             $mhs = Modelmhs::find($nim);
+            $pathFoto = $mhs->mhsfoto;
+
+        if($pathFoto != null || $pathFoto != ''){
+            Storage::delete($pathFoto);
+        }
             $mhs->mhsnama = $nama;
             $mhs->mhstelp = $telp;
             $mhs->mhsalamat = $alamat;
+            $mhs->mhsfoto = $path;
             $mhs->save();
 
-            $r->session()->flash('msg', 'Data Berhasil Diupdate!');
+            $r->session()->flash('msg', "Data dengan $nama Berhasil Diupdate!");
             return redirect('/mhs/index');
         } catch (Throwable $e){
             echo $e;

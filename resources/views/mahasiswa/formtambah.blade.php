@@ -38,7 +38,7 @@
             @endif --}}
 
 
-            <form class="form-group" method="POST" action="{{ url('/mhs/simpan') }}">
+            <form class="form-group" method="POST" action="{{ url('/mhs/simpan') }}" enctype="multipart/form-data">
                 @csrf
                 <table class="table table-sm table-striped" style="windows: 70%;">
                     <tr>
@@ -93,7 +93,16 @@
                         </td>
                     </tr>
                     <tr>
-                        <td></td>
+                        <td>Upload Foto :</td>
+                        <td>
+                            <input type="file" name="foto" id="foto"
+                                class="form-control @error('foto') is-invalid @enderror" accept="images/*">
+                            @error('foto')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </td>
                         <td>
                             <button type="submit" class="btn btn-success">Simpan</button>
                         </td>
